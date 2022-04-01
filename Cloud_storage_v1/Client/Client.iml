@@ -11,6 +11,7 @@
     </content>
     <orderEntry type="jdk" jdkName="corretto-11" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="Common" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.projectlombok:lombok:1.18.22" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.74.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.74.Final" level="project" />
