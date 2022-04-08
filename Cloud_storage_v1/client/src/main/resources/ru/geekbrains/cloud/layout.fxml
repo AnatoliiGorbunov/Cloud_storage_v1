@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="541.0"
+            prefWidth="675.0" style="-fx-background-color: #909090; -fx-border-color: black;"
+            xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.geekbrains.cloud.ClientController">
+
+    <TextField fx:id="clientPath" editable="false" layoutX="29.0" layoutY="100.0" prefHeight="25.0" prefWidth="278.0"
+               style="-fx-border-color: black;"/>
+    <TextField fx:id="serverPath" editable="false" layoutX="372.0" layoutY="100.0" prefHeight="25.0" prefWidth="278.0"
+               style="-fx-border-color: black;"/>
+    <Button fx:id="buttonDownload" layoutX="315.0" layoutY="201.0" mnemonicParsing="false" onAction="#download"
+            prefHeight="25.0" prefWidth="46.0" style="-fx-border-color: black;" text="&lt;&lt;"/>
+    <Button fx:id="buttonUpload" layoutX="315.0" layoutY="155.0" mnemonicParsing="false" onAction="#upload"
+            prefHeight="25.0" prefWidth="46.0" style="-fx-border-color: black;" text="&gt;&gt;"/>
+    <ListView fx:id="clientView" layoutX="29.0" layoutY="135.0" prefHeight="370.0" prefWidth="278.0"
+              style="-fx-border-color: black;"/>
+    <ListView fx:id="serverView" layoutX="372.0" layoutY="135.0" prefHeight="370.0" prefWidth="278.0"
+              style="-fx-border-color: black;"/>
+    <Text fx:id="textClient" layoutX="29.0" layoutY="58.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Client"
+          wrappingWidth="110.13671875">
+        <font>
+            <Font size="18.0"/>
+        </font>
+    </Text>
+    <Text fx:id="textServer" layoutX="372.0" layoutY="57.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server"
+          wrappingWidth="110.13671875">
+        <font>
+            <Font size="18.0"/>
+        </font>
+    </Text>
+    <Text layoutX="29.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Cloud-storage"
+          wrappingWidth="184.13671875">
+        <font>
+            <Font size="25.0"/>
+        </font>
+    </Text>
+    <Button fx:id="deleteClientFile" layoutX="29.0" layoutY="505.0" mnemonicParsing="false" onAction="#deleteClientFile"
+            prefHeight="25.0" prefWidth="152.0" text="Delete select file (Client)"/>
+    <AnchorPane fx:id="logIn" layoutX="199.0" layoutY="201.0" prefHeight="178.0" prefWidth="265.0"
+                style="-fx-background-color: #909090; -fx-border-color: black;">
+        <children>
+            <TextField fx:id="textLogin" layoutX="100.0" layoutY="35.0" style="-fx-border-color: black;"/>
+            <TextField fx:id="textPassword" layoutX="100.0" layoutY="77.0" style="-fx-border-color: black;"/>
+            <Button layoutX="197.0" layoutY="121.0" mnemonicParsing="false" onAction="#authClient"
+                    style="-fx-border-color: black;" text="Log in"/>
+            <Text layoutX="20.0" layoutY="55.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Log in"
+                  wrappingWidth="63.13671875">
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Text>
+            <Text layoutX="20.0" layoutY="96.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Password">
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Text>
+            <AnchorPane fx:id="anchorPaneDelete" layoutX="44.0" layoutY="16.0" prefHeight="87.0" prefWidth="192.0"
+                        style="-fx-background-color: #909090; -fx-border-color: black;">
+                <children>
+                    <Text fill="#dd0606" layoutX="49.0" layoutY="34.0" strokeType="OUTSIDE" strokeWidth="0.0"
+                          text="Delete file?" wrappingWidth="100.9267578125">
+                        <font>
+                            <Font size="18.0"/>
+                        </font>
+                    </Text>
+                    <Button layoutX="23.0" layoutY="44.0" mnemonicParsing="false" style="-fx-border-color: black;"
+                            text="Yes"/>
+                    <Button layoutX="133.0" layoutY="44.0" mnemonicParsing="false" style="-fx-border-color: black;"
+                            text="No"/>
+                </children>
+            </AnchorPane>
+        </children>
+    </AnchorPane>
+    <TextField fx:id="textSearchClient" layoutX="28.0" layoutY="68.0" prefHeight="27.0" prefWidth="223.0"
+               style="-fx-border-color: black;"/>
+    <Button fx:id="buttonSearchClient" onAction="#buttonSearchClient" layoutX="255.0" layoutY="69.0"
+            mnemonicParsing="false" style="-fx-border-color: black;" text="Search"/>
+    <TextField fx:id="textSearchServer" layoutX="372.0" layoutY="69.0" prefHeight="25.0" prefWidth="223.0"
+               style="-fx-border-color: black;"/>
+    <Button fx:id="buttonSearchServer" onAction="#buttonSearchServer" layoutX="598.0" layoutY="69.0"
+            mnemonicParsing="false" style="-fx-border-color: black;" text="Search"/>
+
+
+</AnchorPane>
