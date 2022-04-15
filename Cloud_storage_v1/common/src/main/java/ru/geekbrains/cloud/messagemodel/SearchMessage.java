@@ -16,3 +16,5 @@ public class SearchMessage implements CloudMessage{
         return MessageType.SEARCH_MESSAGE;
     }
 }
+
+

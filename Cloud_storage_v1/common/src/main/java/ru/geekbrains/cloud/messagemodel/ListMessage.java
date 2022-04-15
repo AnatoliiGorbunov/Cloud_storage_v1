@@ -22,4 +22,5 @@ public class ListMessage implements CloudMessage{
     public MessageType getMessageType() {
         return MessageType.LIST;
     }
+
 }

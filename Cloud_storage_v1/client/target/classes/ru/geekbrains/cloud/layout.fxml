@@ -46,7 +46,7 @@
         <children>
             <TextField fx:id="textLogin" layoutX="100.0" layoutY="35.0" style="-fx-border-color: black;"/>
             <TextField fx:id="textPassword" layoutX="100.0" layoutY="77.0" style="-fx-border-color: black;"/>
-            <Button layoutX="197.0" layoutY="121.0" mnemonicParsing="false" onAction="#authClient"
+            <Button fx:id="ButtonAuth" layoutX="197.0" layoutY="121.0" mnemonicParsing="false" onAction="#authClient"
                     style="-fx-border-color: black;" text="Log in"/>
             <Text layoutX="20.0" layoutY="55.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Log in"
                   wrappingWidth="63.13671875">

@@ -1,6 +1,7 @@
 package ru.geekbrains.cloud;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -20,35 +21,22 @@ import ru.geekbrains.cloud.messagemodel.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.net.Socket;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ResourceBundle;
 
 @Slf4j
-public class ClientController {
+public class ClientController implements Initializable {
 
     @FXML
-    public TextField clientPath;
+    public TextField clientPath, serverPath, textSearchClient, textSearchServer;
     @FXML
-    public TextField serverPath;
+    public ListView<String> clientView, serverView;
     @FXML
-    public ListView<String> clientView;
+    public Button buttonDownload, buttonUpload;
     @FXML
-    public ListView<String> serverView;
-    @FXML
-    public Button buttonDownload;
-    @FXML
-    public Button buttonUpload;
-    @FXML
-    public Text textClient;
-    @FXML
-    public Text textServer;
+    public Text textClient,textServer;
     @FXML
     public Button deleteClientFile;
     @FXML
@@ -60,28 +48,15 @@ public class ClientController {
     @FXML
     public AnchorPane anchorPaneDelete;
     @FXML
-    public TextField textSearchClient;
-    @FXML
-    public TextField textSearchServer;
-    @FXML
     public Button buttonSearchClient;
     @FXML
     public Button buttonSearchServer;
+    @FXML
+    public Button ButtonAuth;
 
     private Path clientDir;
-    private final Path serverDir = Paths.get("D:\\WorkingMaterials\\Java.cloud_storage\\Cloud_storage_v1\\Cloud_storage_v1\\server\\Server_cloud");
     private Path searchDir;
     public static final int MB_8 = 8_000_000;
-    private ClientServer clientServer;
-
-
-    private ObjectEncoderOutputStream oos;
-    private ObjectDecoderInputStream ois;
-
-    public ClientController(){
-        clientServer = new ClientServer(this);
-
-    }
 
 
     void setAuthorized() {
@@ -122,10 +97,11 @@ public class ClientController {
     }
 
     public void download(ActionEvent actionEvent) throws IOException {//посылаем запрос
-        oos.writeObject(new FileRequest(serverView.getSelectionModel().getSelectedItem()));
+//       oos.writeObject(new FileRequest(serverView.getSelectionModel().getSelectedItem()));
     }
 
     public void upload(ActionEvent actionEvent) throws IOException {//посылаем запрос
+
 //        oos.writeObject(new FileMessage(clientDir.resolve(clientView.getSelectionModel().getSelectedItem())));
 
     }
@@ -160,22 +136,19 @@ public class ClientController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public void buttonSearchServer(ActionEvent actionEvent) throws IOException {
-        final String fileToFind = File.separator + textSearchServer.getText().trim();
-        oos.writeObject(new SearchMessage(fileToFind));
+            SearchMessage searchMessage = new SearchMessage(File.separator + textSearchServer.getText().trim());
+            NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(searchMessage);
+
     }
 
-
     public void authClient(ActionEvent actionEvent) throws IOException {
-        String login = textLogin.getText().trim();
-        String password = textPassword.getText().trim();
-        oos.writeObject(new AuthMessage(login, password));
-        textLogin.clear();
-        textPassword.clear();
-        textLogin.requestFocus();
+        if (!textLogin.getText().trim().isEmpty() && !textPassword.getText().trim().isEmpty()) {
+            AuthMessage authMessage = new AuthMessage(textLogin.getText().trim(), textPassword.getText().trim());
+            NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(authMessage);
+        }
     }
 
     private void clientNavigation() {
@@ -197,6 +170,20 @@ public class ClientController {
         });
     }
 
+    private void updateServerView(){
+
+        serverView.setOnMouseClicked(mouseClicked ->{
+            if(mouseClicked.getClickCount() == 2){
+                String item = serverView.getSelectionModel().getSelectedItem();
+               if(item.equals("...")){
+
+
+               }
+            }
+        });
+    }
+
+
     private void updateClientView() {
         Platform.runLater(() -> {
             clientPath.setText(String.valueOf(clientDir.toAbsolutePath()));
@@ -208,64 +195,14 @@ public class ClientController {
         });
     }
 
-    private void read() {
-        try {
 
-            while (true) {
-                CloudMessage msg = (CloudMessage) ois.readObject();// в качестве объекта ожидаем клоуд мессадж
-                // в зависимости от типа
-                switch (msg.getMessageType()) {
-                    case SEARCH_MESSAGE:
-                        SearchMessage sm = (SearchMessage) msg;
-                        String search = ((SearchMessage) msg).getSearch();
-                        searchDir = Paths.get(search);
-                        Platform.runLater(() -> {
-                            serverPath.setText(String.valueOf(searchDir));
-                            serverView.getItems().clear();
-                            serverView.getItems().add("...");
-                            serverView.getItems().addAll(searchDir.toFile().list());
-                        });
-                        break;
-                    case AUTH_MESSAGE:
-                        setAuthorizedIsOk();
-                        break;
-                    case FILE:
-                        FileMessage fm = (FileMessage) msg;
-//                        Files.write(clientDir.resolve(fm.getName()), fm.getBytes());//записываем байты
-                        updateClientView();
-                        break;
-                    case LIST:
-                        ListMessage lm = (ListMessage) msg;
-                        Platform.runLater(() -> {
-                            serverPath.setText(String.valueOf(serverDir.toAbsolutePath()));
-                            serverView.getItems().clear();
-                            serverView.getItems().add("...");
-                            serverView.getItems().addAll(lm.getFiles());
-                        });
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private void initNetwork() {//поднимаем соке
-        //        try {
-//            Socket socket = new Socket("localhost", 8189);
-//            oos = new ObjectEncoderOutputStream(socket.getOutputStream());
-//            ois = new ObjectDecoderInputStream(socket.getInputStream());
+        new Thread(() -> NetworkClient.getOurInstance().start(ClientController.this)).start();
         clientDir = Paths.get("D:\\WorkingMaterials\\Java.cloud_storage\\Cloud_storage_v1\\Cloud_storage_v1\\client\\client-cloud");
         clientNavigation();
-//            Thread readThread = new Thread(this::read);
-//            readThread.setDaemon(true);
-//            readThread.start();
 
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
-
 
 
     public void initialize(URL url, ResourceBundle resourceBundle) {

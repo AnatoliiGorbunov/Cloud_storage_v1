@@ -9,15 +9,27 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 
-public class ClientServer {
+public class NetworkClient {
     public static final int MB_8 = 1024 * 1024 * 8;
-
-    private final ClientController clientController;
-
-    public ClientServer(ClientController clientController) {
-        this.clientController = clientController;
+    private static NetworkClient ourInstance = new NetworkClient();
 
 
+    private ClientController clientController;
+
+    public static NetworkClient getOurInstance() {
+        return ourInstance;
+    }
+
+    public NetworkClient() {
+    }
+
+    private Channel currentChannel;
+
+    public Channel getCurrentChannel() {
+        return currentChannel;
+    }
+
+    void start(ClientController clientController) {
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = new Bootstrap();
@@ -30,13 +42,13 @@ public class ClientServer {
                     socketChannel.pipeline().addLast(
                             new ObjectDecoder(MB_8, ClassResolvers.cacheDisabled(null)),
                             new ObjectEncoder(),
-                            new ClientHandler()
+                            new ClientHandler(clientController)
                     );
+                    currentChannel = socketChannel;
                 }
             });
-            bootstrap.option(ChannelOption.SO_BACKLOG, 128);
+            bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture channelFuture = bootstrap.connect().sync();
-            Channel channel = channelFuture.channel();
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -45,3 +57,4 @@ public class ClientServer {
     }
 
 }
+

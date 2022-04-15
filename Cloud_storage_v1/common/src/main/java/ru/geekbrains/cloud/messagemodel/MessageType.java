@@ -5,6 +5,9 @@ public enum MessageType {
     LIST,
     FILE_REQUEST,
     AUTH_MESSAGE,
-    SEARCH_MESSAGE;
+    SEARCH_MESSAGE,
+    COMMAND_MESSAGE,
+    NAME_SERVER_DIRECTORY
+
 
   }

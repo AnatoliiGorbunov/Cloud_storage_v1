@@ -16,6 +16,7 @@ public class CloudClientApplication extends Application {
         stage.setTitle("Cloud-storage v1.0");
         stage.show();
 
+
     }
 
     public static void main(String[] args) {
