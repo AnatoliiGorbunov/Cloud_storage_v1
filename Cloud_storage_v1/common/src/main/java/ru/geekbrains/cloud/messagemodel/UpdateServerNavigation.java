@@ -1,20 +1,21 @@
 package ru.geekbrains.cloud.messagemodel;
 
+
 import lombok.Data;
 
 import java.nio.file.Path;
 
 @Data
-public class FileRequest implements CloudMessage {
+public class UpdateServerNavigation implements CloudMessage {
 
-    private final Path path;
+    private Path path;
 
-    public FileRequest(Path path) {
+    public UpdateServerNavigation(Path path) {
         this.path = path;
     }
 
     @Override
     public MessageType getMessageType() {
-        return MessageType.FILE_REQUEST;
+        return MessageType.UPDATE_SERVER_NAVIGATION;
     }
 }
