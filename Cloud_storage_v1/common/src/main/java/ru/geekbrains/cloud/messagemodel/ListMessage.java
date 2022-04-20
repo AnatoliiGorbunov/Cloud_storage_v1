@@ -8,8 +8,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Data
-public class ListMessage implements CloudMessage{
+public class ListMessage implements CloudMessage {
 
     private final List<String> files;
 
@@ -18,9 +19,11 @@ public class ListMessage implements CloudMessage{
                 .map(p -> p.getFileName().toString())
                 .collect(Collectors.toList());
     }
+
     @Override
     public MessageType getMessageType() {
         return MessageType.LIST;
     }
+
 
 }

@@ -1,12 +1,9 @@
 package ru.geekbrains.cloud;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.serialization.*;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,7 +18,10 @@ import ru.geekbrains.cloud.messagemodel.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ResourceBundle;
@@ -30,34 +30,23 @@ import java.util.ResourceBundle;
 public class ClientController implements Initializable {
 
     @FXML
-    public TextField clientPath, serverPath, textSearchClient, textSearchServer;
-    @FXML
     public ListView<String> clientView, serverView;
     @FXML
-    public Button buttonDownload, buttonUpload;
+    public Text textClient, textServer;
     @FXML
-    public Text textClient,textServer;
+    public AnchorPane logIn, anchorPaneDelete;
     @FXML
-    public Button deleteClientFile;
+    public TextField clientPath, serverPath,
+            textSearchClient, textSearchServer,
+            textLogin, textPassword;
     @FXML
-    public AnchorPane logIn;
-    @FXML
-    public TextField textLogin;
-    @FXML
-    public TextField textPassword;
-    @FXML
-    public AnchorPane anchorPaneDelete;
-    @FXML
-    public Button buttonSearchClient;
-    @FXML
-    public Button buttonSearchServer;
-    @FXML
-    public Button ButtonAuth;
+    public Button buttonDownload, buttonUpload,
+            buttonSearchClient, buttonSearchServer,
+            buttonAuth, deleteClientFile;
 
     private Path clientDir;
-    private Path searchDir;
+    private Path serverDir;
     public static final int MB_8 = 8_000_000;
-
 
     void setAuthorized() {
         clientPath.setVisible(false);
@@ -74,7 +63,6 @@ public class ClientController implements Initializable {
         textSearchServer.setVisible(false);
         buttonSearchServer.setVisible(false);
         buttonSearchClient.setVisible(false);
-
     }
 
     void setAuthorizedIsOk() {
@@ -92,18 +80,43 @@ public class ClientController implements Initializable {
         textSearchServer.setVisible(true);
         buttonSearchServer.setVisible(true);
         buttonSearchClient.setVisible(true);
-
-
     }
 
-    public void download(ActionEvent actionEvent) throws IOException {//посылаем запрос
-//       oos.writeObject(new FileRequest(serverView.getSelectionModel().getSelectedItem()));
+    public void download(ActionEvent actionEvent) throws IOException {
+        Path path = Paths.get(String.valueOf(serverDir.resolve(serverView.getSelectionModel().getSelectedItem())));
+        NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(new FileRequest(serverDir));
     }
 
-    public void upload(ActionEvent actionEvent) throws IOException {//посылаем запрос
+    public void upload(ActionEvent actionEvent) throws IOException {
+        Path path = Paths.get(String.valueOf(clientDir.resolve(clientView.getSelectionModel().getSelectedItem())));
+        int marker = 0;
+        try {
+            byte[] data = Files.readAllBytes(Paths.get(String.valueOf(path)));
+            byte[] dataTemp = new byte[MB_8];
+            if (data.length < MB_8) {
+                dataTemp = new byte[data.length];
+            }
+            for (int i = 0; i < data.length; i++) {
+                dataTemp[marker] = data[i];
+                marker++;
+                if (marker == dataTemp.length) {
+                    PackageFile packageFile = new PackageFile(Paths.get(String.valueOf(path)), false, dataTemp);
+                    NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(packageFile);
+                    marker = 0;
+                    if (data.length - i < MB_8) {
+                        dataTemp = new byte[data.length - i];
 
-//        oos.writeObject(new FileMessage(clientDir.resolve(clientView.getSelectionModel().getSelectedItem())));
+                    } else {
+                        dataTemp = new byte[MB_8];
 
+                    }
+                }
+            }
+            PackageFile packageFile = new PackageFile(Paths.get(String.valueOf(path)), true, dataTemp);
+            NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(packageFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -111,6 +124,10 @@ public class ClientController implements Initializable {
         Path path = Paths.get(String.valueOf(clientDir.resolve(clientView.getSelectionModel().getSelectedItem())));
         Files.delete(path);
         updateClientView();
+    }
+
+    public void deleteServerFile(ActionEvent actionEvent) throws IOException {
+
     }
 
     public void buttonSearchClient(ActionEvent actionEvent) {
@@ -139,8 +156,8 @@ public class ClientController implements Initializable {
     }
 
     public void buttonSearchServer(ActionEvent actionEvent) throws IOException {
-            SearchMessage searchMessage = new SearchMessage(File.separator + textSearchServer.getText().trim());
-            NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(searchMessage);
+        SearchMessage searchMessage = new SearchMessage(File.separator + textSearchServer.getText().trim());
+        NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(searchMessage);
 
     }
 
@@ -149,6 +166,33 @@ public class ClientController implements Initializable {
             AuthMessage authMessage = new AuthMessage(textLogin.getText().trim(), textPassword.getText().trim());
             NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(authMessage);
         }
+    }
+
+    private void serverNavigation() {
+        serverDir = Paths.get("D:\\WorkingMaterials\\Java.cloud_storage\\Cloud_storage_v1\\Cloud_storage_v1\\server\\Server_cloud");
+        serverView.setOnMouseClicked(mouseClicked -> {
+            if (mouseClicked.getClickCount() == 2) {
+                String item = serverView.getSelectionModel().getSelectedItem();
+                if (item.equals("...")) {
+                    serverDir = serverDir.getParent();
+                    try {
+                        updateServerNavigation(serverDir);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Path selected = serverDir.resolve(item);
+                    if (selected.toFile().isDirectory()) {
+                        serverDir = selected;
+                        try {
+                            updateServerNavigation(serverDir);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void clientNavigation() {
@@ -170,21 +214,11 @@ public class ClientController implements Initializable {
         });
     }
 
-    private void updateServerView(){
-
-        serverView.setOnMouseClicked(mouseClicked ->{
-            if(mouseClicked.getClickCount() == 2){
-                String item = serverView.getSelectionModel().getSelectedItem();
-               if(item.equals("...")){
-
-
-               }
-            }
-        });
+    void updateServerNavigation(Path path) throws IOException {
+        NetworkClient.getOurInstance().getCurrentChannel().writeAndFlush(new UpdateServerNavigation(path));
     }
 
-
-    private void updateClientView() {
+    public void updateClientView() {
         Platform.runLater(() -> {
             clientPath.setText(String.valueOf(clientDir.toAbsolutePath()));
             clientView.getItems().clear();
@@ -195,23 +229,17 @@ public class ClientController implements Initializable {
         });
     }
 
-
-
-    private void initNetwork() {//поднимаем соке
+    private void initNetwork() {
         new Thread(() -> NetworkClient.getOurInstance().start(ClientController.this)).start();
-        clientDir = Paths.get("D:\\WorkingMaterials\\Java.cloud_storage\\Cloud_storage_v1\\Cloud_storage_v1\\client\\client-cloud");
-        clientNavigation();
+
 
     }
-
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initNetwork();
         setAuthorized();
         updateClientView();
-
-
+        clientNavigation();
+        serverNavigation();
     }
-
-
 }

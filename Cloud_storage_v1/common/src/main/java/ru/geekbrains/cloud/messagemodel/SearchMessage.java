@@ -3,7 +3,7 @@ package ru.geekbrains.cloud.messagemodel;
 import lombok.Data;
 
 @Data
-public class SearchMessage implements CloudMessage{
+public class SearchMessage implements CloudMessage {
 
     private final String search;
 

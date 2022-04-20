@@ -8,6 +8,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import lombok.Data;
+
 
 public class NetworkClient {
     public static final int MB_8 = 1024 * 1024 * 8;
